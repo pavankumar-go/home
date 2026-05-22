@@ -1,0 +1,146 @@
+namespaceOverride: kube-system
+k8sServiceHost: "REPLACE.gr7.ap-southeast-3.eks.amazonaws.com"
+k8sServicePort: 443
+resources:
+  limits:
+    cpu: 1000m
+    memory: 500Mi
+  requests:
+    cpu: 100m
+    memory: 250Mi
+
+l2announcements:
+  enabled: false # only for baremetal
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: cni
+              operator: In
+              values: ["cilium"]
+operator:
+  priorityClassName: system-node-critical
+  unmanagedPodWatcher:
+    restart: false
+  tolerations:
+    - operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+      effect: "NoExecute"
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: cni
+                operator: In
+                values:
+                  - cilium
+
+envoy:
+  enabled: false
+
+ipam:
+  mode: "eni"
+  ciliumNodeUpdateRate: "15s"
+
+etcd:
+  enabled: false
+
+encryption:
+  enabled: true
+  type: wireguard
+
+eni:
+  enabled: true
+  awsReleaseExcessIPs: true
+  awsEnablePrefixDelegation: true
+  nodeSpec:
+    firstInterfaceIndex: 1
+
+routingMode: native
+
+ipv4NativeRoutingCIDR: "10.50.0.0/16"
+
+endpointRoutes:
+  enabled: false
+
+bpf:
+  hostLegacyRouting: false
+  masquerade: true
+
+kubeProxyReplacement: true
+kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
+
+devices:
+  - "eth+"
+
+enableIPv4Masquerade: true
+
+agentNotReadyTaintKey: node.cilium.io/agent-not-ready
+removeNodeTaints: true
+
+priorityClassName: system-node-critical
+
+hubble:
+  enabled: true
+  metrics:
+    enabled:
+    - dns:query;ignoreAAAA
+    - drop
+    - tcp
+    - flow
+    - icmp
+    - http
+
+  relay:
+    enabled: true
+    replicas: 1
+    dialTimeout: 60s
+    retryTimeout: 60s
+    rollOutPods: false
+    resources:
+      limits:
+        cpu: 500m
+        memory: 500Mi
+      requests:
+        cpu: 250m
+        memory: 250Mi
+    nodeSelector:
+      nodesrole: ingress
+    tolerations:
+    - key: noderole
+      value: ingress
+      operator: Equal
+      effect: NoSchedule
+
+  ui:
+    enabled: true
+    backend:
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 500Mi
+    frontend:
+      resources:
+        limits:
+          cpu: 200m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 250Mi
+      server:
+        ipv6:
+          enabled: false
+    nodeSelector:
+      nodesrole: ingress
+    tolerations:
+    - key: noderole
+      value: ingress
+      operator: Equal
+      effect: NoSchedule
